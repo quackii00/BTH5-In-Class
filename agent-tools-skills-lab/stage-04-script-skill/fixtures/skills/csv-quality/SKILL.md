@@ -1,3 +1,8 @@
+---
+name: csv-quality
+description: Kiểm tra chất lượng CSV công việc và tính tổng giờ theo owner, bao gồm owner quá tải và các dòng bị loại.
+---
+
 # CSV Quality
 
 Kiểm tra chất lượng CSV công việc và tính tổng giờ theo owner.
