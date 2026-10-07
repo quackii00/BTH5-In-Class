@@ -11,10 +11,21 @@ import paths
 SCRIPT = paths.FIXTURES_DIR / "skills" / "csv-quality" / "scripts" / "check_csv.py"
 
 
-def run(path):
-    return subprocess.run([sys.executable, str(SCRIPT), "--input", str(path)], capture_output=True, text=True, timeout=10)
-
-
+def run(path, max_hours=8):
+    return subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--input",
+            str(path),
+            "--max-hours",
+            str(max_hours),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=10,
+    )
 def write_csv(tmp_path, text):
     path = tmp_path / "t.csv"
     path.write_text(text, encoding="utf-8")
@@ -75,3 +86,25 @@ def test_script_does_not_modify_input():
     before = source.read_bytes()
     run(source)
     assert source.read_bytes() == before
+
+def test_first_invalid_duplicate_is_not_replaced_by_later_valid_row(tmp_path):
+    result = run(
+        write_csv(
+            tmp_path,
+            "task_id,owner,hours\n"
+            "E01,Lan,abc\n"
+            "E01,Lan,5\n"
+            "E02,Minh,0\n",
+        )
+    )
+
+    assert result.returncode == 0, result.stderr
+    data = json.loads(result.stdout)
+
+    assert data["hours_by_owner"] == {"Minh": 0.0}
+    assert data["overloaded_owners"] == []
+    assert data["excluded_rows"] == [
+        {"line": 2, "task_id": "E01", "reasons": ["invalid_hours"]},
+        {"line": 3, "task_id": "E01", "reasons": ["duplicate_id"]},
+    ]
+

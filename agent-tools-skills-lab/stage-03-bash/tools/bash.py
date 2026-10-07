@@ -46,8 +46,11 @@ def _run_bash(command: str, workspace: Path, timeout: float = DEFAULT_TIMEOUT_SE
     if not command.strip():
         return {"ok": False, "exit_code": None, "stdout": "", "stderr": "", "timed_out": False,
                 "error": {"code": "EMPTY_COMMAND", "message": "Command rỗng."}}
+    
+    if command.strip() == "pwd":
+        command = "pwd -W"
     process = subprocess.Popen(
-        ["bash", "-c", command],  # không login shell, không đọc profile
+    [r"C:\Program Files\Git\bin\bash.exe", "-c", command],  # không login shell, không đọc profile
         cwd=workspace,
         env=minimal_env(workspace),
         stdin=subprocess.DEVNULL,
